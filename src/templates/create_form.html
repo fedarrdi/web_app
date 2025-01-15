@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create a Form</title>
+</head>
+<body>
+    <header>
+        <h1>Form Builder</h1>
+    </header>
+    <main>
+        <h2>Create a Form</h2>
+        <form method="post">
+            <label for="name">Form Name:</label>
+            <input type="text" id="name" name="name" required>
+            <div id="fields">
+                <label>Fields:</label>
+                <input type="text" name="fields[]" placeholder="Field Name">
+            </div>
+            <button type="button" onclick="addField()">Add Field</button>
+            <button type="submit">Create Form</button>
+        </form>
+    </main>
+    <footer>
+        <p>&copy; 2025 Form Builder. All rights reserved.</p>
+    </footer>
+    <script src="/static/js/scripts.js"></script>
+</body>
+</html>
+

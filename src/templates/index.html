@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Builder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        header, footer {
+            background-color: #f4f4f4;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        nav {
+            margin: 10px 0;
+            text-align: center;
+        }
+        nav a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #333;
+        }
+        nav a:hover {
+            color: #007BFF;
+        }
+        .form-list {
+            margin-top: 20px;
+            padding: 0;
+            list-style-type: none;
+        }
+        .form-item {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .form-item h3 {
+            margin-top: 0;
+        }
+        .form-item ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Form Builder</h1>
+    </header>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/create_form">Create Form</a>
+    </nav>
+    <main>
+        <section id="home">
+            <h2>Forms</h2>
+            {% if forms|length > 0 %}
+                <ul class="form-list">
+                    {% for form in forms %}
+                        <li class="form-item">
+                            <h3>{{ form.form_name }}</h3>
+                            <p><strong>Fields:</strong></p>
+                            <ul>
+                                {% for field in form.fields %}
+                                    <li>{{ field }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No forms available. Create one <a href="{{ url_for('create_form') }}">here</a>.</p>
+            {% endif %}
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Form Builder. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+
