@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Builder</title>
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Form Builder</h1>
+        
+    </header>
+    <nav>
+        <a href="/">home</a>
+        <a href="/create_form">create form</a>
+        <a href="/login">log in</a>
+        <a href="/signup"> sign up</a>
+        <a href="/code"> code</a>
+    </nav>
+    <main>
+        <section id="home">
+            <h2>Forms</h2>
+            {% if forms|length > 0 %}
+                <ul class="form-list">
+                    {% for form in forms %}
+                        <li class="form-item">
+                            <h3>{{ form.form_name }}</h3>
+                            <h4>Creator: {{form.creator}}</h4>
+                            <h4>Secret code: {{form.code}}</h4>
+                            <p><strong>Fields:</strong></p>
+                            <ul>
+                                {% for field in form.fields %}
+                                    <li>{{ field }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No forms available. Create one <a href="{{ url_for('create_form') }}">here</a>.</p>
+            {% endif %}
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Form Builder. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+
