@@ -5,11 +5,12 @@ import logging
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
 
-
 client = MongoClient("mongodb://localhost:27017/")
 db = client["flask_web_app"]
 forms_collection = db["forms"]
 user_collection = db["users"]
+answers_collection = db["answer"]
+
 logging.info("Connected to MongoDB.")
 
 @app.route("/")
@@ -32,21 +33,53 @@ def code():
 
     forms = []
     if request.method == "POST":
-        secret_code = request.form.get("secret_code")
-        if not secret_code:
-            flash("Please enter a secret code.")
-            return redirect(url_for("code"))
-        try:
-            forms = list(forms_collection.find({"code": secret_code}))
+        if "secret_code" in request.form:
+            # Handle the secret code submission
+            secret_code = request.form.get("secret_code")
+            if not secret_code:
+                flash("Please enter a secret code.")
+                return redirect(url_for("code"))
+            try:
+                forms = list(forms_collection.find({"code": secret_code}))
+                if not forms:
+                    flash("No forms found with the provided secret code.")
+            except Exception as e:
+                logging.error(f"Error fetching forms by secret code: {e}")
+                flash("An error occurred. Please try again.")
 
-            if not forms:
-                flash("No forms found with the provided secret code.")
+        elif "submit_answers" in request.form:
+            print("in")
+            try:
+                print("in1")
+                form_id = request.form.get("form_id")
+                answers = {}
 
-        except Exception as e:
-            logging.error(f"Error fetching forms by secret code: {e}")
-            flash("An error occurred. Please try again.")
+                # Collect all selected answers from the form
+                for key, value in request.form.items():
+                    if key.startswith("question_"):
+                        question_id = key.split("_")[1]
+                        answers[question_id] = value
 
-    print(forms)
+
+                print(answers)
+
+
+                # Save to MongoDB
+                answer_doc = {
+                    "form_id": form_id,
+                    "user": session["username"],
+                    "answers": answers,
+                }
+
+                # Insert into a new collection for answers
+                answers_collection.insert_one(answer_doc)
+                flash("Answers submitted successfully!")
+                return redirect(url_for("code"))
+
+            except Exception as e:
+                logging.error(f"Error saving answers: {e}")
+                flash("An error occurred while saving your answers.")
+
     return render_template("code.html", forms=forms)
 
 
@@ -118,4 +151,5 @@ def create_form():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 

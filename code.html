@@ -4,15 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enter Secret Code</title>
+    <style>
+        .question-block {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .answer-option {
+            margin: 10px 0;
+        }
+        .submit-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .submit-button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
     <nav>
         <a href="/">Home</a>
         <a href="/create_form">Create Form</a>
     </nav>
-
     <h1>Enter Secret Code</h1>
-
     <form method="POST">
         <label for="secret_code">Secret Code:</label>
         <input type="text" id="secret_code" name="secret_code" required>
@@ -20,27 +41,35 @@
     </form>
 
     {% if forms %}
-    <h2>Forms with Secret Code</h2>
-    <ul>
-        {% for form in forms %}
-        <li>
-            <strong>{{ form.formName }}</strong> <!-- Display form name -->
-            <ul>
-                {% for question in form.questions %}
-                <li>
-                    <strong>Question:</strong> {{ question.question }} <!-- Display question text -->
-                    <ul>
-                        {% for answer in question.answers %}
-                        <li>{{ answer }}</li> <!-- Display each answer -->
-                        {% endfor %}
-                    </ul>
-                    <strong>Correct Answer Index:</strong> {{ question.correctAnswer }} <!-- Display correct answer index -->
-                </li>
+    {% for form in forms %}
+    <div class="form-container">
+        <h2>{{ form.formName }}</h2>
+        <form method="POST">
+            <input type="hidden" name="submit_answers" value="true">
+            <input type="hidden" name="form_id" value="{{ form._id }}">
+            
+            {% for question in form.questions %}
+            <div class="question-block">
+                <h3>Question: {{ question.question }}</h3>
+                {% for answer in question.answers %}
+                <div class="answer-option">
+                    <input type="radio" 
+                           id="q{{ loop.index0 }}_a{{ loop.index }}"
+                           name="question_{{ loop.index0 }}"
+                           value="{{ loop.index0 }}"
+                           required>
+                    <label for="q{{ loop.index0 }}_a{{ loop.index }}">
+                        {{ answer }}
+                    </label>
+                </div>
                 {% endfor %}
-            </ul>
-        </li>
-        {% endfor %}
-    </ul>
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="submit-button">Submit Answers</button>
+        </form>
+    </div>
+    {% endfor %}
     {% endif %}
 </body>
 </html>

@@ -8,32 +8,38 @@
 <body>
     <header>
         <h1>Welcome to the Form Builder</h1>
-        
     </header>
     <nav>
         <a href="/">home</a>
         <a href="/create_form">create form</a>
         <a href="/login">log in</a>
-        <a href="/signup"> sign up</a>
-        <a href="/code"> code</a>
+        <a href="/signup">sign up</a>
+        <a href="/code">code</a>
     </nav>
     <main>
         <section id="home">
             <h2>Forms</h2>
             {% if forms|length > 0 %}
-                <ul class="form-list">
+                <ul>
                     {% for form in forms %}
-                        <li class="form-item">
-                            <h3>{{ form.form_name }}</h3>
-                            <h4>Creator: {{form.creator}}</h4>
-                            <h4>Secret code: {{form.code}}</h4>
-                            <p><strong>Fields:</strong></p>
-                            <ul>
-                                {% for field in form.fields %}
-                                    <li>{{ field }}</li>
-                                {% endfor %}
-                            </ul>
-                        </li>
+                    <li>
+                        <strong>{{ form.formname }}</strong> <!-- Display form name -->
+                        <ul>
+                            {% for question in form.questions %}
+                            <li>
+                                <strong>Question:</strong> {{ question.question }} <!-- Display question text -->
+                                <ul>
+                                    {% for answer in question.answers %}
+                                    <li>
+                                        {{ loop.index0 }}: {{ answer }} <!-- Display answer with index -->
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                <strong>Correct Answer Index:</strong> {{ question.correctanswer }} <!-- Display correct answer index -->
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
                     {% endfor %}
                 </ul>
             {% else %}
