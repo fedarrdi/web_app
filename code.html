@@ -9,12 +9,6 @@
     <nav>
         <a href="/">Home</a>
         <a href="/create_form">Create Form</a>
-        <a href="/enter_secret_code">Enter Secret Code</a>
-        {% if session.get('username') %}
-        <a href="/logout">Logout</a>
-        {% else %}
-        <a href="/login">Login</a>
-        {% endif %}
     </nav>
 
     <h1>Enter Secret Code</h1>
@@ -30,10 +24,18 @@
     <ul>
         {% for form in forms %}
         <li>
-            <strong>{{ form.form_name }}</strong>
+            <strong>{{ form.formName }}</strong> <!-- Display form name -->
             <ul>
-                {% for field in form.fields %}
-                <li>{{ field }}</li>
+                {% for question in form.questions %}
+                <li>
+                    <strong>Question:</strong> {{ question.question }} <!-- Display question text -->
+                    <ul>
+                        {% for answer in question.answers %}
+                        <li>{{ answer }}</li> <!-- Display each answer -->
+                        {% endfor %}
+                    </ul>
+                    <strong>Correct Answer Index:</strong> {{ question.correctAnswer }} <!-- Display correct answer index -->
+                </li>
                 {% endfor %}
             </ul>
         </li>

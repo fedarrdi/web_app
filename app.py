@@ -27,6 +27,9 @@ def home():
 
 @app.route("/code", methods=["GET", "POST"])
 def code():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
     forms = []
     if request.method == "POST":
         secret_code = request.form.get("secret_code")
@@ -35,12 +38,15 @@ def code():
             return redirect(url_for("code"))
         try:
             forms = list(forms_collection.find({"code": secret_code}))
+
             if not forms:
                 flash("No forms found with the provided secret code.")
+
         except Exception as e:
             logging.error(f"Error fetching forms by secret code: {e}")
             flash("An error occurred. Please try again.")
 
+    print(forms)
     return render_template("code.html", forms=forms)
 
 
@@ -99,27 +105,16 @@ def signup():
 def create_form():
     if "username" in session:
         if request.method == "POST":
-            form_name = request.form.get("name")
-            form_secret_code = request.form.get("code")
-            fields = request.form.getlist("fields[]")
-
-            if not form_name or not fields:
-                flash("Form name and at least one field are required.")
-                return redirect(url_for("create_form"))
-
-            form_data = {"form_name": form_name, "fields": fields, "creator": session["username"], "code": form_secret_code}
-            forms_collection.insert_one(form_data)
-
-            flash("Form created successfully!")
-            return redirect(url_for("home"))
+            try:
+                quiz_data = request.json
+                quiz_data["creator"] = session["username"]
+                result = forms_collection.insert_one(quiz_data)
+                return redirect(url_for("home"))
+            except Exception as e:
+                return e
         return render_template("create_form.html")
-
     else:
         return redirect(url_for("login"))
-
-
-with app.test_request_context():
-    print(app.url_map)
 
 if __name__ == "__main__":
     app.run(debug=True)

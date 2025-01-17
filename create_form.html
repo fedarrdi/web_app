@@ -3,38 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create a Form</title>
+    <title>Quiz Creator</title>
+
+    <nav>
+        <a href="/">home</a>
+        <a href="/create_form">create form</a>
+        <a href="/login">log in</a>
+        <a href="/signup"> sign up</a>
+        <a href="/code"> code</a>
+    </nav>
+ 
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .question-block {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .answer-container {
+            margin: 10px 0;
+        }
+        button {
+            margin: 5px;
+            padding: 5px 10px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Form Builder</h1>
-        <nav>
-            <a href="/">home</a>
-        </nav>
+    <h1>Quiz Creator</h1>
+    <form id="quizForm">
+        <div>
+            <label for="formName">Form Name:</label>
+            <input type="text" id="formName" name="formName" required>
+        </div>
+        <div>
+            <label for="code">Code:</label>
+            <input type="text" id="code" name="code" required>
+        </div>
+        
+        <div id="questionsContainer"></div>
+        
+        <button type="button" onclick="addQuestion()">Add New Question</button>
+        <button type="submit">Submit Quiz</button>
+    </form>
 
-    </header>
-    <main>
-        <h2>Create a Form</h2>
-        <form method="post">
-            <label for="name">Form Name:</label>
-            <input type="text" id="name" name="name" required>
+    <script>
+        let questionCounter = 0;
+
+        function addQuestion() {
+            questionCounter++;
+            const questionBlock = document.createElement('div');
+            questionBlock.className = 'question-block';
+            questionBlock.innerHTML = `
+                <h3>Question ${questionCounter}</h3>
+                <input type="text" name="question_${questionCounter}" placeholder="Enter question" required>
+                <div class="answer-container" id="answers_${questionCounter}">
+                    <input type="text" name="answer_${questionCounter}_1" placeholder="Enter answer" required>
+                </div>
+                <button type="button" onclick="addAnswer(${questionCounter})">Add Another Answer</button>
+                <div>
+                    <label for="correct_${questionCounter}">Correct Answer Number:</label>
+                    <input type="number" name="correct_${questionCounter}" min="1" required>
+                </div>
+            `;
+            document.getElementById('questionsContainer').appendChild(questionBlock);
+        }
+
+        function addAnswer(questionNum) {
+            const answersContainer = document.getElementById(`answers_${questionNum}`);
+            const answerCount = answersContainer.getElementsByTagName('input').length + 1;
+            const newAnswer = document.createElement('input');
+            newAnswer.type = 'text';
+            newAnswer.name = `answer_${questionNum}_${answerCount}`;
+            newAnswer.placeholder = 'Enter answer';
+            newAnswer.required = true;
+            answersContainer.appendChild(newAnswer);
+        }
+
+        document.getElementById('quizForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            <div>
-                <label for="code">Secret code:</label>
-                <input type="text" id="code" name="code" required>
-            </div>
-            <div id="fields">
-                <label>Fields:</label>
-                <input type="text" name="fields[]" placeholder="Field Name"> 
-            </div>
-            <button type="button" onclick="addField()">Add Field</button>
-            <button type="submit">Create Form</button>
-        </form>
-    </main>
-    <footer>
-        <p>&copy; 2025 Form Builder. All rights reserved.</p>
-    </footer>
-    <script src="/static/js/scripts.js"></script>
+            const formData = new FormData(e.target);
+            const quizData = {
+                formName: formData.get('formName'),
+                code: formData.get('code'),
+                questions: []
+            };
+
+            // Collect all questions and their answers
+            for (let i = 1; i <= questionCounter; i++) {
+                const questionData = {
+                    question: formData.get(`question_${i}`),
+                    answers: [],
+                    correctAnswer: parseInt(formData.get(`correct_${i}`))
+                };
+
+                // Collect all answers for this question
+                let answerIndex = 1;
+                while (formData.get(`answer_${i}_${answerIndex}`)) {
+                    questionData.answers.push(formData.get(`answer_${i}_${answerIndex}`));
+                    answerIndex++;
+                }
+
+                quizData.questions.push(questionData);
+            }
+
+            try {
+                const response = await fetch('/create_form', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(quizData)
+                });
+                
+                if (response.ok) {
+                    alert('Quiz submitted successfully!');
+                    location.reload();
+                } else {
+                    alert('Error submitting quiz');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error submitting quiz');
+            }
+        });
+
+        // Add first question automatically
+        addQuestion();
+    </script>
 </body>
 </html>
-
