@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completed Forms for {{ username }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-container {
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .form-header {
+            background-color: #f5f5f5;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .question {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #fff;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .incorrect {
+            color: red;
+        }
+        .answer-details {
+            margin-left: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Completed Forms for {{ username }}</h1>
+    
+    {% for form in forms %}
+    <div class="form-container">
+        <div class="form-header">
+            <h2>{{ form.form_name }}</h2>
+            <p>Form Code: {{ form.code }}</p>
+            <p>Created by: {{ form.creator }}</p>
+        </div>
+        
+        {% for question in form.questions %}
+        <div class="question">
+            <h3>Question: {{ question.question_text }}</h3>
+            <div class="answer-details">
+                <p>Your answer: 
+                    <span class="{% if question.is_correct %}correct{% else %}incorrect{% endif %}">
+                        {{ question.user_answer }}
+                    </span>
+                </p>
+                {% if not question.is_correct %}
+                <p>Correct answer: <span class="correct">{{ question.correct_answer }}</span></p>
+                {% endif %}
+                <p>Available options:</p>
+                <ul>
+                    {% for answer in question.possible_answers %}
+                    <li>{{ answer }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</body>
+</html>

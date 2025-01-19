@@ -26,6 +26,12 @@
         .submit-button:hover {
             background-color: #45a049;
         }
+        .error-message {
+            color: red;
+            display: none;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -44,7 +50,7 @@
     {% for form in forms %}
     <div class="form-container">
         <h2>{{ form.formName }}</h2>
-        <form method="POST">
+        <form method="POST" onsubmit="return validateForm(this)">
             <input type="hidden" name="submit_answers" value="true">
             <input type="hidden" name="form_id" value="{{ form._id }}">
             
@@ -54,15 +60,15 @@
                 {% for answer in question.answers %}
                 <div class="answer-option">
                     <input type="radio" 
-                           id="q{{ loop.index0 }}_a{{ loop.index }}"
-                           name="question_{{ loop.index0 }}"
-                           value="{{ loop.index0 }}"
-                           required>
+                           id="q{{ loop.index0 }}_a{{ loop.index }}" 
+                           name="question_{{ loop.index0 }}" 
+                           value="{{ loop.index0 }}">
                     <label for="q{{ loop.index0 }}_a{{ loop.index }}">
                         {{ answer }}
                     </label>
                 </div>
                 {% endfor %}
+                <div class="error-message">Please select an answer for this question</div>
             </div>
             {% endfor %}
             
@@ -70,7 +76,42 @@
         </form>
     </div>
     {% endfor %}
+
+    <script>
+        function validateForm(form) {
+            let isValid = true;
+            const questionBlocks = form.getElementsByClassName('question-block');
+            
+            // Reset all error messages
+            const errorMessages = form.getElementsByClassName('error-message');
+            for (let msg of errorMessages) {
+                msg.style.display = 'none';
+            }
+            
+            // Check each question block
+            for (let block of questionBlocks) {
+                const radioButtons = block.querySelectorAll('input[type="radio"]');
+                const errorMessage = block.querySelector('.error-message');
+                
+                // Check if any radio button in this group is selected
+                let questionAnswered = false;
+                for (let radio of radioButtons) {
+                    if (radio.checked) {
+                        questionAnswered = true;
+                        break;
+                    }
+                }
+                
+                // If no answer selected, show error and set form as invalid
+                if (!questionAnswered) {
+                    errorMessage.style.display = 'block';
+                    isValid = false;
+                }
+            }
+            
+            return isValid;
+        }
+    </script>
     {% endif %}
 </body>
 </html>
-
