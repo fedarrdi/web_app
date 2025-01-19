@@ -1,8 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-
+import pandas as pd
+from io import BytesIO
+from pymongo import MongoClient
+from datetime import datetime
 import logging
+from collections import Counter
+
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
@@ -14,6 +19,208 @@ user_collection = db["users"]
 answers_collection = db["answer"]
 
 logging.info("Connected to MongoDB.")
+def create_export(form_code, export_format):
+    # Find form by code
+    form = forms_collection.find_one({'code': form_code})
+    if not form:
+        return None
+
+    # Get all answers for this form
+    answers = list(answers_collection.find({'form_id': str(form['_id'])}))
+    print(answers)
+    # Create workbook
+    output = BytesIO()
+
+    if export_format == 'csv':
+        df = create_form_dataframe(form, answers)
+        df.to_csv(output, index=False)
+    else:  # Excel format
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            # Form Information Sheet
+            create_form_info_sheet(writer, form)
+            print("kjadsadjsalkjdlsakdjsaldlas")
+            # Questions and Statistics Sheet
+            create_questions_stats_sheet(writer, form, answers)
+
+            # Individual Responses Sheet
+            create_responses_sheet(writer, form, answers)
+
+    output.seek(0)
+
+    # Generate filename
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"{form['formName']}_{timestamp}.{export_format}"
+
+    return output, filename
+
+def create_form_info_sheet(writer, form):
+    """Creates the basic form information sheet"""
+    info_data = {
+        'Property': ['Form Name', 'Creator', 'Code', 'Number of Questions'],
+        'Value': [
+            form['formName'],
+            form['creator'],
+            form['code'],
+            len(form['questions'])
+        ]
+    }
+    df_info = pd.DataFrame(info_data)
+    df_info.to_excel(writer, sheet_name='Form Information', index=False)
+
+def create_questions_stats_sheet(writer, form, answers):
+    """Creates detailed statistics for each question"""
+    all_stats = []
+    print("*************************************************************")
+
+    for q_idx, question in enumerate(form['questions']):
+        # Basic question info
+        question_stats = {
+            'Question Number': q_idx + 1,
+            'Question Text': question['question'],
+            'Correct Answer': question['answers'][question['correctAnswer']],
+            'Total Responses': len(answers)
+        }
+
+        # Calculate statistics for each possible answer
+        answer_counts = Counter()
+        for answer_doc in answers:
+            if q_idx in answer_doc['answers']:
+                selected_idx = int(answer_doc['answers'][q_idx])
+                if selected_idx < len(question['answers']):
+                    selected_answer = question['answers'][selected_idx]
+                    answer_counts[selected_answer] += 1
+        print("======================================================================")
+        print(answer_counts)
+
+        # Calculate percentages for each answer
+        total_responses = len(answers)
+        for idx, answer in enumerate(question['answers']):
+            count = answer_counts[answer]
+            percentage = (count / total_responses * 100) if total_responses > 0 else 0
+            question_stats[f'Answer Option {idx + 1}'] = answer
+            question_stats[f'Count for Option {idx + 1}'] = count
+            question_stats[f'Percentage for Option {idx + 1}'] = f"{percentage:.1f}%"
+
+            # Mark if this is the correct answer
+            if idx == question['correctAnswer']:
+                question_stats[f'Note for Option {idx + 1}'] = "CORRECT ANSWER"
+
+        all_stats.append(question_stats)
+
+    # Create DataFrame and write to Excel
+    df_stats = pd.DataFrame(all_stats)
+    df_stats.to_excel(writer, sheet_name='Questions & Statistics', index=False)
+
+def create_responses_sheet(writer, form, answers):
+    """Creates detailed sheet of individual responses"""
+    rows = []
+
+    for answer_doc in answers:
+        row = {
+            'User': answer_doc['user']
+        }
+
+        # Add each question and the user's answer
+        for q_idx, question in enumerate(form['questions']):
+            q_num = q_idx + 1
+            row[f'Q{q_num} - {question["question"]}'] = question['answers'][
+                int(answer_doc['answers'][q_idx])
+            ]
+
+            # Add if answer was correct
+            user_answer_idx = int(answer_doc['answers'][q_idx])
+            is_correct = user_answer_idx == question['correctAnswer']
+            row[f'Q{q_num} Correct?'] = 'Yes' if is_correct else 'No'
+
+        rows.append(row)
+
+    df_responses = pd.DataFrame(rows)
+    df_responses.to_excel(writer, sheet_name='Individual Responses', index=False)
+
+def create_form_dataframe(form, answers):
+    """Creates a single DataFrame for CSV export"""
+    # First, create the form information section
+    rows = [
+        {'Section': 'Form Information', 'Field': 'Form Name', 'Value': form['formName']},
+        {'Section': 'Form Information', 'Field': 'Creator', 'Value': form['creator']},
+        {'Section': 'Form Information', 'Field': 'Code', 'Value': form['code']},
+        {'Section': 'Form Information', 'Field': 'Total Questions', 'Value': len(form['questions'])},
+        {'Section': 'Form Information', 'Field': 'Total Responses', 'Value': len(answers)},
+        {'Section': '', 'Field': '', 'Value': ''}  # Empty row for spacing
+    ]
+
+    # Add questions section with statistics
+    for q_idx, question in enumerate(form['questions']):
+        # Add question information
+        rows.append({
+            'Section': f'Question {q_idx + 1}',
+            'Field': 'Question Text',
+            'Value': question['question']
+        })
+        rows.append({
+            'Section': f'Question {q_idx + 1}',
+            'Field': 'Correct Answer',
+            'Value': question['answers'][question['correctAnswer']]
+        })
+
+        # Calculate answer statistics
+        answer_counts = Counter()
+        total_responses = Counter()
+        for answer_doc in answers:
+            print(q_idx, answer_doc)
+            if q_idx in answer_doc['answers']:
+                selected_idx = int(answer_doc['answers'][q_idx])
+                print(f"Selected idx: {selected_idx}, options: {len(question['answers'])}")
+                if selected_idx < len(question['answers']):
+                    selected_answer = question['answers'][selected_idx]
+                    answer_counts[selected_answer] += 1
+                    total_responses[q_idx] += 1
+
+        print(answer_counts)
+        print(total_responses)
+
+        # Add statistics for each answer option
+        total_responses = len(answers)
+        for idx, answer in enumerate(question['answers']):
+            count = answer_counts[answer]
+            percentage = (count / total_responses * 100) if total_responses > 0 else 0
+            rows.append({
+                'Section': f'Question {q_idx + 1}',
+                'Field': f'Option {idx + 1}',
+                'Value': f"{answer} - {count} responses ({percentage:.1f}%)"
+                f"{' (CORRECT ANSWER)' if idx == question['correctAnswer'] else ''}"
+            })
+
+        rows.append({'Section': '', 'Field': '', 'Value': ''})  # Spacing
+
+    return pd.DataFrame(rows)
+
+@app.route('/export', methods=['GET', 'POST'])
+def export_form():
+    if request.method == 'POST':
+        secret_code = request.form.get('secret_code')
+        export_format = request.form.get('format', 'csv')
+        print(secret_code + " " + export_format)
+
+        result = create_export(secret_code, export_format)
+        print(result)
+        if result is None:
+            print("aleadnroooooo")
+            flash('No form found with this code')
+            return redirect(url_for('export_form'))
+
+        output, filename = result
+
+        mimetype = 'text/csv' if export_format == 'csv' else 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+        return send_file(
+            output,
+            mimetype=mimetype,
+            as_attachment=True,
+            download_name=filename
+        )
+
+    return render_template('export.html')
 
 @app.route('/user_made_forms')
 def user_forms():
@@ -48,8 +255,8 @@ def user_forms():
                 'question_text': question['question'],
                 'possible_answers': question['answers'],
                 'correct_answer': question['correctAnswer'],
-                'user_answer': question['answers'][int(answer['answers'][str(idx)])],
-                'is_correct': str(question['correctAnswer']) == answer['answers'].get(str(idx), None)
+                'user_answer': question['answers'][int(answer['answers'][idx])],
+                'is_correct': question['correctAnswer'] == answer['answers'][idx]
             }
             form_details['questions'].append(question_data)
 
@@ -67,7 +274,7 @@ def home():
     except Exception as e:
         logging.error(f"Error fetching forms for user {session['username']}: {e}")
         forms = []
-    print(forms)
+
     return render_template("index.html", forms=forms)
 
 
@@ -95,12 +302,12 @@ def code():
         elif "submit_answers" in request.form:
             try:
                 form_id = request.form.get("form_id")
-                answers = {}
+                answers = [None for q in request.form.keys() if q.startswith("question_")]
 
                 for key, value in request.form.items():
                     if key.startswith("question_"):
-                        question_id = key.split("_")[1]
-                        answers[str(int(question_id) - 1)] = value
+                        question_id = int(key.split("_")[1])
+                        answers[question_id - 1] = int(value)
 
                 existing_entry = answers_collection.find_one({
                     "form_id": form_id,
@@ -190,6 +397,7 @@ def create_form():
         if request.method == "POST":
             try:
                 quiz_data = request.json
+                print(quiz_data)
                 quiz_data["creator"] = session["username"]
                 result = forms_collection.insert_one(quiz_data)
                 return redirect(url_for("home"))

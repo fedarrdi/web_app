@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Form Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .export-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .format-options {
+            margin: 15px 0;
+        }
+        .submit-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .submit-button:hover {
+            background-color: #45a049;
+        }
+        .flash-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background-color: #ff6b6b;
+            color: white;
+        }
+        nav {
+            margin-bottom: 20px;
+        }
+        nav a {
+            margin-right: 15px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/create_form">Create Form</a>
+    </nav>
+
+    <div class="export-container">
+        <h2>Export Form Results</h2>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label for="secret_code">Enter Form Secret Code:</label>
+                <input type="text" id="secret_code" name="secret_code" required>
+            </div>
+
+            <div class="format-options">
+                <label>Select Export Format:</label>
+                <div>
+                    <input type="radio" id="csv" name="format" value="csv" checked>
+                    <label for="csv">CSV</label>
+                </div>
+                <div>
+                    <input type="radio" id="excel" name="format" value="excel">
+                    <label for="excel">Excel</label>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button">Export Results</button>
+        </form>
+    </div>
+</body>
+</html>

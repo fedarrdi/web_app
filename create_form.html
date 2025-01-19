@@ -108,7 +108,7 @@
                 const questionData = {
                     question: formData.get(`question_${i}`),
                     answers: [],
-                    correctAnswer: parseInt(formData.get(`correct_${i}`))
+                    correctAnswer: parseInt(formData.get(`correct_${i}`)) - 1
                 };
 
                 // Collect all answers for this question
