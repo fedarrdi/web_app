@@ -44,7 +44,6 @@ def user_forms():
             completed_forms.append(form_details)
 
         for idx, question in enumerate(form['questions']):
-            print(answer['answers'])
             question_data = {
                 'question_text': question['question'],
                 'possible_answers': question['answers'],
@@ -68,7 +67,7 @@ def home():
     except Exception as e:
         logging.error(f"Error fetching forms for user {session['username']}: {e}")
         forms = []
-
+    print(forms)
     return render_template("index.html", forms=forms)
 
 

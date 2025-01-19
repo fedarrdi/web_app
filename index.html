@@ -24,7 +24,7 @@
                 <ul>
                     {% for form in forms %}
                     <li>
-                        <strong>{{ form.formname }}</strong> <!-- Display form name -->
+                        <strong>{{ form.formName }}</strong> <!-- Display form name -->
                         <ul>
                             {% for question in form.questions %}
                             <li>
@@ -36,7 +36,7 @@
                                     </li>
                                     {% endfor %}
                                 </ul>
-                                <strong>Correct Answer Index:</strong> {{ question.correctanswer }} <!-- Display correct answer index -->
+                                <strong>Correct Answer:</strong> {{ question.correctAnswer }} <!-- Display correct answer index -->
                             </li>
                             {% endfor %}
                         </ul>
